@@ -1,17 +1,30 @@
-#![deny(unsafe_code)]
 #![no_main]
 #![no_std]
 
 use cortex_m_rt::entry;
-use microbit as _;
-use panic_halt as _;
+use microbit::{
+    hal::{prelude::*, Timer},
+    Board,
+};
+use panic_rtt_target as _;
+use rtt_target::{rprintln, rtt_init_print};
 
 #[entry]
 fn main() -> ! {
-    let _y;
-    let x = 42;
-    _y = x;
+    rtt_init_print!();
 
-    // infinite loop; just so we don't leave this stack frame
-    loop {}
+    let mut board = Board::take().unwrap();
+
+    let mut timer = Timer::new(board.TIMER0);
+
+    board.display_pins.col1.set_low().unwrap();
+    let mut row1 = board.display_pins.row1;
+
+    loop {
+        row1.set_low().unwrap();
+        timer.delay_ms(1_000_u16);
+        rprintln!("Toggled LED");
+        row1.set_high().unwrap();
+        timer.delay_ms(1_000_u16);
+    }
 }
